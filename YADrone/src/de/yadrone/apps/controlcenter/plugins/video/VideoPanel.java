@@ -140,6 +140,7 @@ public class VideoPanel extends JPanel implements ICCPlugin, ImageListener
 			private ImageListener imageListener = new ImageListener() {
 				public void imageUpdated(BufferedImage image) 
 				{
+					//KNS(Kamil) : Comment to prevent loading of video
 					try
 					{
 						writer.encodeVideo(0, image, System.nanoTime() - startTime, TimeUnit.NANOSECONDS);

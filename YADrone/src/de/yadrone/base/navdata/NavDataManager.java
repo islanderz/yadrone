@@ -30,14 +30,14 @@ import de.yadrone.base.command.DetectionType;
 import de.yadrone.base.exception.IExceptionListener;
 import de.yadrone.base.manager.AbstractManager;
 import de.yadrone.base.utils.ARDroneUtils;
+import sa.uavcs.paho.client.MavMqttClient;
 
 //TODO: refactor parsing code into separate classes but need to think about how to put the listener code
 //option: make it one abstract listener, disadvantage: each client has many methods to implement
-public class NavDataManager extends AbstractManager 
-{
+public class NavDataManager extends AbstractManager {
 
 	private IExceptionListener excListener;
-	
+
 	private static final int NB_ACCS = 3;
 	private static final int NB_GYROS = 3;
 
@@ -80,15 +80,14 @@ public class NavDataManager extends AbstractManager
 	private ArrayList<PWMlistener> pwmlistener = new ArrayList<PWMlistener>();
 	private ArrayList<ReferencesListener> referencesListener = new ArrayList<ReferencesListener>();
 	private ArrayList<TrimsListener> trimsListener = new ArrayList<TrimsListener>();
-	
+
 	private long lastSequenceNumber = 1;
 
 	private int mask = 0;
 	private boolean maskChanged = true;
 	private int checksum = 0;
 
-	public NavDataManager(InetAddress inetaddr, CommandManager manager, IExceptionListener excListener) 
-	{
+	public NavDataManager(InetAddress inetaddr, CommandManager manager, IExceptionListener excListener) {
 		super(inetaddr);
 		this.manager = manager;
 		this.excListener = excListener;
@@ -116,12 +115,12 @@ public class NavDataManager extends AbstractManager
 		this.attitudeListener.remove(attitudeListener);
 		setMask(this.attitudeListener.size() == 0, new int[] { DEMO_TAG, EULER_ANGLES_TAG, WIND_TAG });
 	}
-	
+
 	public void addAltitudeListener(AltitudeListener altitudeListener) {
 		this.altitudeListener.add(altitudeListener);
 		setMask(this.altitudeListener.size() == 1, new int[] { DEMO_TAG, ALTITUDE_TAG });
 	}
-	
+
 	public void removeAltitudeListener(AltitudeListener altitudeListener) {
 		this.altitudeListener.remove(altitudeListener);
 		setMask(this.altitudeListener.size() == 0, new int[] { DEMO_TAG, ALTITUDE_TAG });
@@ -131,7 +130,7 @@ public class NavDataManager extends AbstractManager
 		this.batteryListener.add(batteryListener);
 		setMask(this.batteryListener.size() == 1, new int[] { DEMO_TAG, RAW_MEASURES_TAG });
 	}
-	
+
 	public void removeBatteryListener(BatteryListener batteryListener) {
 		this.batteryListener.remove(batteryListener);
 		setMask(this.batteryListener.size() == 0, new int[] { DEMO_TAG, RAW_MEASURES_TAG });
@@ -146,7 +145,7 @@ public class NavDataManager extends AbstractManager
 		this.timeListener.remove(timeListener);
 		setMask(this.timeListener.size() == 0, new int[] { TIME_TAG });
 	}
-	
+
 	public void addStateListener(StateListener stateListener) {
 		this.stateListener.add(stateListener);
 		setMask(this.stateListener.size() == 1, new int[] { DEMO_TAG });
@@ -156,7 +155,7 @@ public class NavDataManager extends AbstractManager
 		this.stateListener.remove(stateListener);
 		setMask(this.stateListener.size() == 0, new int[] { DEMO_TAG });
 	}
-	
+
 	public void addVelocityListener(VelocityListener velocityListener) {
 		this.velocityListener.add(velocityListener);
 		setMask(this.velocityListener.size() == 1, new int[] { DEMO_TAG });
@@ -166,19 +165,19 @@ public class NavDataManager extends AbstractManager
 		this.velocityListener.remove(velocityListener);
 		setMask(this.velocityListener.size() == 0, new int[] { DEMO_TAG });
 	}
-	
+
 	public void addVisionListener(VisionListener visionListener) {
 		this.visionListener.add(visionListener);
-		setMask(this.visionListener.size() == 1, new int[] { DEMO_TAG, TRACKERS_SEND_TAG, VISION_DETECT_TAG, VISION_OF_TAG,
-			VISION_TAG, VISION_PERF_TAG, VISION_RAW_TAG });
+		setMask(this.visionListener.size() == 1, new int[] { DEMO_TAG, TRACKERS_SEND_TAG, VISION_DETECT_TAG,
+				VISION_OF_TAG, VISION_TAG, VISION_PERF_TAG, VISION_RAW_TAG });
 	}
 
 	public void removeVisionListener(VisionListener visionListener) {
 		this.visionListener.remove(visionListener);
-		setMask(this.visionListener.size() == 0, new int[] { DEMO_TAG, TRACKERS_SEND_TAG, VISION_DETECT_TAG, VISION_OF_TAG,
-				VISION_TAG, VISION_PERF_TAG, VISION_RAW_TAG });
+		setMask(this.visionListener.size() == 0, new int[] { DEMO_TAG, TRACKERS_SEND_TAG, VISION_DETECT_TAG,
+				VISION_OF_TAG, VISION_TAG, VISION_PERF_TAG, VISION_RAW_TAG });
 	}
-	
+
 	public void addMagnetoListener(MagnetoListener magnetoListener) {
 		this.magnetoListener.add(magnetoListener);
 		setMask(this.magnetoListener.size() == 1, new int[] { MAGNETO_TAG });
@@ -188,12 +187,12 @@ public class NavDataManager extends AbstractManager
 		this.magnetoListener.remove(magnetoListener);
 		setMask(this.magnetoListener.size() == 0, new int[] { MAGNETO_TAG });
 	}
-	
+
 	public void addAcceleroListener(AcceleroListener acceleroListener) {
 		this.acceleroListener.add(acceleroListener);
 		setMask(this.acceleroListener.size() == 1, new int[] { PHYS_MEASURES_TAG, RAW_MEASURES_TAG });
 	}
-	
+
 	public void removeAcceleroListener(AcceleroListener acceleroListener) {
 		this.acceleroListener.remove(acceleroListener);
 		setMask(this.acceleroListener.size() == 0, new int[] { PHYS_MEASURES_TAG, RAW_MEASURES_TAG });
@@ -203,7 +202,7 @@ public class NavDataManager extends AbstractManager
 		this.gyroListener.add(gyroListener);
 		setMask(this.gyroListener.size() == 1, new int[] { GYROS_OFFSETS_TAG, PHYS_MEASURES_TAG, RAW_MEASURES_TAG });
 	}
-	
+
 	public void removeGyroListener(GyroListener gyroListener) {
 		this.gyroListener.remove(gyroListener);
 		setMask(this.gyroListener.size() == 0, new int[] { GYROS_OFFSETS_TAG, PHYS_MEASURES_TAG, RAW_MEASURES_TAG });
@@ -218,12 +217,12 @@ public class NavDataManager extends AbstractManager
 		this.ultrasoundListener.remove(ultrasoundListener);
 		setMask(this.ultrasoundListener.size() == 0, new int[] { RAW_MEASURES_TAG });
 	}
-	
+
 	public void addAdcListener(AdcListener adcListener) {
 		this.adcListener.add(adcListener);
 		setMask(this.adcListener.size() == 1, new int[] { ADC_DATA_FRAME_TAG });
 	}
-	
+
 	public void removeAdcListener(AdcListener adcListener) {
 		this.adcListener.remove(adcListener);
 		setMask(this.adcListener.size() == 0, new int[] { ADC_DATA_FRAME_TAG });
@@ -238,7 +237,7 @@ public class NavDataManager extends AbstractManager
 		this.counterListener.remove(counterListener);
 		setMask(this.counterListener.size() == 0, new int[] { GAMES_TAG });
 	}
-	
+
 	public void addPressureListener(PressureListener pressureListener) {
 		this.pressureListener.add(pressureListener);
 		setMask(this.pressureListener.size() == 1, new int[] { KALMAN_PRESSURE_TAG, PRESSURE_RAW_TAG });
@@ -248,7 +247,7 @@ public class NavDataManager extends AbstractManager
 		this.pressureListener.remove(pressureListener);
 		setMask(this.pressureListener.size() == 0, new int[] { KALMAN_PRESSURE_TAG, PRESSURE_RAW_TAG });
 	}
-	
+
 	public void addTemperatureListener(TemperatureListener temperatureListener) {
 		this.temperatureListener.add(temperatureListener);
 		setMask(this.temperatureListener.size() == 1, new int[] { PRESSURE_RAW_TAG });
@@ -258,7 +257,7 @@ public class NavDataManager extends AbstractManager
 		this.temperatureListener.remove(temperatureListener);
 		setMask(this.temperatureListener.size() == 0, new int[] { PRESSURE_RAW_TAG });
 	}
-	
+
 	public void addWindListener(WindListener windListener) {
 		this.windListener.add(windListener);
 		setMask(this.windListener.size() == 1, new int[] { WIND_TAG });
@@ -268,7 +267,7 @@ public class NavDataManager extends AbstractManager
 		this.windListener.remove(windListener);
 		setMask(this.windListener.size() == 0, new int[] { WIND_TAG });
 	}
-	
+
 	public void addVideoListener(VideoListener videoListener) {
 		this.videoListener.add(videoListener);
 		setMask(this.videoListener.size() == 1, new int[] { HDVIDEO_STREAM_TAG, VIDEO_STREAM_TAG });
@@ -278,7 +277,7 @@ public class NavDataManager extends AbstractManager
 		this.videoListener.remove(videoListener);
 		setMask(this.videoListener.size() == 0, new int[] { HDVIDEO_STREAM_TAG, VIDEO_STREAM_TAG });
 	}
-	
+
 	public void addWifiListener(WifiListener wifiListener) {
 		this.wifiListener.add(wifiListener);
 		setMask(this.wifiListener.size() == 1, new int[] { WIFI_TAG });
@@ -288,7 +287,7 @@ public class NavDataManager extends AbstractManager
 		this.wifiListener.remove(wifiListener);
 		setMask(this.wifiListener.size() == 0, new int[] { WIFI_TAG });
 	}
-	
+
 	public void addZimmu3000Listener(Zimmu3000Listener zimmu3000Listener) {
 		this.zimmu3000Listener.add(zimmu3000Listener);
 		setMask(this.zimmu3000Listener.size() == 1, new int[] { ZIMMU_3000_TAG });
@@ -298,7 +297,7 @@ public class NavDataManager extends AbstractManager
 		this.zimmu3000Listener.remove(zimmu3000Listener);
 		setMask(this.zimmu3000Listener.size() == 0, new int[] { ZIMMU_3000_TAG });
 	}
-	
+
 	public void addPWMlistener(PWMlistener pwmlistener) {
 		this.pwmlistener.add(pwmlistener);
 		setMask(this.pwmlistener.size() == 1, new int[] { PWM_TAG });
@@ -308,12 +307,12 @@ public class NavDataManager extends AbstractManager
 		this.pwmlistener.remove(pwmlistener);
 		setMask(this.pwmlistener.size() == 0, new int[] { PWM_TAG });
 	}
-	
+
 	public void addReferencesListener(ReferencesListener referencesListener) {
 		this.referencesListener.add(referencesListener);
 		setMask(this.referencesListener.size() == 1, new int[] { RC_REFERENCES_TAG, REFERENCES_TAG });
 	}
-	
+
 	public void removeReferencesListener(ReferencesListener referencesListener) {
 		this.referencesListener.remove(referencesListener);
 		setMask(this.referencesListener.size() == 0, new int[] { RC_REFERENCES_TAG, REFERENCES_TAG });
@@ -328,7 +327,7 @@ public class NavDataManager extends AbstractManager
 		this.trimsListener.remove(trimsListener);
 		setMask(this.trimsListener.size() == 0, new int[] { TRIMS_TAG });
 	}
-	
+
 	@Override
 	public void run() {
 		connect(ARDroneUtils.NAV_PORT);
@@ -353,7 +352,8 @@ public class NavDataManager extends AbstractManager
 					controlAck = s.isControlReceived();
 					manager.setControlAck(controlAck);
 					if (s.isNavDataBootstrap()) {
-						// presumably iso setting the demo option we can already ask for the options we want here
+						// presumably iso setting the demo option we can already
+						// ask for the options we want here
 						manager.setNavDataDemo(true);
 						System.out.println("Navdata Bootstrapped");
 					} else {
@@ -380,14 +380,10 @@ public class NavDataManager extends AbstractManager
 					manager.setNavDataOptions(mask);
 					maskChanged = false;
 				}
-			} 
-			catch (SocketTimeoutException t) 
-			{
+			} catch (SocketTimeoutException t) {
 				System.err.println("Navdata reception timeout");
 				excListener.exeptionOccurred(new de.yadrone.base.exception.NavDataException(t));
-			} 
-			catch (Throwable t) 
-			{
+			} catch (Throwable t) {
 				// continue whatever goes wrong
 				t.printStackTrace();
 			}
@@ -400,7 +396,8 @@ public class NavDataManager extends AbstractManager
 
 		b.order(ByteOrder.LITTLE_ENDIAN);
 		int magic = b.getInt();
-//		checkEqual(0x55667788, magic, "Magic must be correct"); // throws exception, do not know why
+		// checkEqual(0x55667788, magic, "Magic must be correct"); // throws
+		// exception, do not know why
 
 		int state = b.getInt();
 		long sequence = getUInt32(b);
@@ -408,13 +405,14 @@ public class NavDataManager extends AbstractManager
 
 		// if (sequence <= lastSequenceNumber && sequence != 1) {
 		// // TODO sometimes we seem to receive a previous packet, find out why
-		// throw new NavDataException("Invalid sequence number received (received=" + sequence + " last="
+		// throw new NavDataException("Invalid sequence number received
+		// (received=" + sequence + " last="
 		// + lastSequenceNumber);
 		// }
 		lastSequenceNumber = sequence;
 
 		DroneState s = new DroneState(state, vision);
-		for (int i=0; i < stateListener.size(); i++) {
+		for (int i = 0; i < stateListener.size(); i++) {
 			stateListener.get(i).stateChanged(s);
 		}
 
@@ -423,13 +421,35 @@ public class NavDataManager extends AbstractManager
 			int tag = b.getShort() & 0xFFFF;
 			int payloadSize = (b.getShort() & 0xFFFF) - 4;
 			ByteBuffer optionData = b.slice().order(ByteOrder.LITTLE_ENDIAN);
-			payloadSize = Math.min(payloadSize, optionData.remaining()); // added due to new AR.Drone firmware version as of 06.01.2014 (don't know which version > 2.3.3 and < 2.4.8 caused the change)
+			payloadSize = Math.min(payloadSize, optionData.remaining()); // added
+																			// due
+																			// to
+																			// new
+																			// AR.Drone
+																			// firmware
+																			// version
+																			// as
+																			// of
+																			// 06.01.2014
+																			// (don't
+																			// know
+																			// which
+																			// version
+																			// >
+																			// 2.3.3
+																			// and
+																			// <
+																			// 2.4.8
+																			// caused
+																			// the
+																			// change)
 			optionData.limit(payloadSize);
 			parseOption(tag, optionData);
 			b.position(b.position() + payloadSize);
 		}
 
-		// verify checksum; a bit of a hack: assume checksum = 0 is very unlikely
+		// verify checksum; a bit of a hack: assume checksum = 0 is very
+		// unlikely
 		if (checksum != 0) {
 			checkEqual(getCRC(b, 0, b.limit() - 4), checksum, "Checksum does not match");
 			checksum = 0;
@@ -570,7 +590,7 @@ public class NavDataManager extends AbstractManager
 			int vzimmuLSB = b.getInt();
 			float vzfind = b.getFloat();
 
-			for (int i=0; i < zimmu3000Listener.size(); i++)
+			for (int i = 0; i < zimmu3000Listener.size(); i++)
 				zimmu3000Listener.get(i).received(vzimmuLSB, vzfind);
 		}
 
@@ -580,8 +600,8 @@ public class NavDataManager extends AbstractManager
 		// TODO: verify if link quality stays below Integer.MAX_INT
 		if (wifiListener.size() > 0) {
 			long link_quality = getUInt32(b);
-			
-			for (int i=0; i < wifiListener.size(); i++)
+
+			for (int i = 0; i < wifiListener.size(); i++)
 				wifiListener.get(i).received(link_quality);
 		}
 
@@ -616,8 +636,8 @@ public class NavDataManager extends AbstractManager
 
 			HDVideoStreamData d = new HDVideoStreamData(hdvideo_state, storage_fifo_nb_packets, storage_fifo_size,
 					usbkey_size, usbkey_freespace, frame_number, usbkey_remaining_time);
-			
-			for (int i=0; i < videoListener.size(); i++)
+
+			for (int i = 0; i < videoListener.size(); i++)
 				videoListener.get(i).receivedHDVideoStreamData(d);
 		}
 	}
@@ -646,8 +666,8 @@ public class NavDataManager extends AbstractManager
 			KalmanPressureData d = new KalmanPressureData(offset_pressure, est_z, est_zdot, est_bias_PWM,
 					est_biais_pression, offset_US, prediction_US, cov_alt, cov_PWM, cov_vitesse, effet_sol, somme_inno,
 					rejet_US, u_multisinus, gaz_altitude, multisinus, multisinus_debut);
-			
-			for (int i=0; i < pressureListener.size(); i++)
+
+			for (int i = 0; i < pressureListener.size(); i++)
 				pressureListener.get(i).receivedKalmanPressure(d);
 		}
 	}
@@ -658,7 +678,8 @@ public class NavDataManager extends AbstractManager
 			// estimated wind speed [m/s]
 			float wind_speed = b.getFloat();
 
-			// estimated wind direction in North-East frame [rad] e.g. if wind_angle
+			// estimated wind direction in North-East frame [rad] e.g. if
+			// wind_angle
 			// is pi/4, wind is from South-West to North-East
 			float wind_angle = b.getFloat();
 
@@ -669,11 +690,10 @@ public class NavDataManager extends AbstractManager
 
 			float[] magneto = getFloat(b, 3);
 
-			for (int i=0; i < attitudeListener.size(); i++)
+			for (int i = 0; i < attitudeListener.size(); i++)
 				attitudeListener.get(i).windCompensation(wind_compensation_theta, wind_compensation_phi);
 
-			for (int i=0; i < windListener.size(); i++)
-			{
+			for (int i = 0; i < windListener.size(); i++) {
 				WindEstimationData d = new WindEstimationData(wind_speed, wind_angle, state, magneto);
 				windListener.get(i).receivedEstimation(d);
 			}
@@ -689,14 +709,12 @@ public class NavDataManager extends AbstractManager
 			int temperature_meas = b.getInt();
 			int pression_meas = b.getInt();
 
-			for (int i=0; i < pressureListener.size(); i++)
-			{
+			for (int i = 0; i < pressureListener.size(); i++) {
 				Pressure d = new Pressure(up, pression_meas);
 				pressureListener.get(i).receivedPressure(d);
 			}
 
-			for (int i=0; i < temperatureListener.size(); i++)
-			{
+			for (int i = 0; i < temperatureListener.size(); i++) {
 				Temperature d = new Temperature(ut, temperature_meas);
 				temperatureListener.get(i).receivedTemperature(d);
 			}
@@ -710,7 +728,7 @@ public class NavDataManager extends AbstractManager
 			long finish_line_counter = getUInt32(b);
 
 			Counters d = new Counters(double_tap_counter, finish_line_counter);
-			for (int i=0; i < counterListener.size(); i++)
+			for (int i = 0; i < counterListener.size(); i++)
 				counterListener.get(i).update(d);
 		}
 
@@ -767,8 +785,8 @@ public class NavDataManager extends AbstractManager
 			VideoStreamData d = new VideoStreamData(quant, frame_size, frame_number, atcmd_ref_seq, atcmd_mean_ref_gap,
 					atcmd_var_ref_gap, atcmd_ref_quality, out_bitrate, desired_bitrate, temp_data, tcp_queue_level,
 					fifo_queue_level);
-			
-			for (int i=0; i < videoListener.size(); i++)
+
+			for (int i = 0; i < videoListener.size(); i++)
 				videoListener.get(i).receivedVideoStreamData(d);
 		}
 	}
@@ -783,7 +801,7 @@ public class NavDataManager extends AbstractManager
 			b.get(data_frame);
 
 			AdcFrame d = new AdcFrame(version, data_frame);
-			for (int i=0; i < adcListener.size(); i++)
+			for (int i = 0; i < adcListener.size(); i++)
 				adcListener.get(i).receivedFrame(d);
 		}
 	}
@@ -792,7 +810,7 @@ public class NavDataManager extends AbstractManager
 		if (watchdogListener.size() > 0) {
 			int watchdog = b.getInt();
 
-			for (int i=0; i < watchdogListener.size(); i++)
+			for (int i = 0; i < watchdogListener.size(); i++)
 				watchdogListener.get(i).received(watchdog);
 		}
 	}
@@ -819,7 +837,7 @@ public class NavDataManager extends AbstractManager
 			}
 
 			// TODO: create Tracker class containing locked + point?
-			for (int i=0; i < visionListener.size(); i++)
+			for (int i = 0; i < visionListener.size(); i++)
 				visionListener.get(i).trackersSend(new TrackerData(trackers));
 		}
 	}
@@ -834,10 +852,10 @@ public class NavDataManager extends AbstractManager
 			float time_update = b.getFloat();
 			float[] time_custom = getFloat(b, NAVDATA_MAX_CUSTOM_TIME_SAVE);
 
-			VisionPerformance d = new VisionPerformance(time_szo, time_corners, time_compute, time_tracking,
-					time_trans, time_update, time_custom);
-			
-			for (int i=0; i < visionListener.size(); i++)
+			VisionPerformance d = new VisionPerformance(time_szo, time_corners, time_compute, time_tracking, time_trans,
+					time_update, time_custom);
+
+			for (int i = 0; i < visionListener.size(); i++)
 				visionListener.get(i).receivedPerformanceData(d);
 		}
 	}
@@ -872,8 +890,8 @@ public class NavDataManager extends AbstractManager
 					vision_theta_trim, vision_theta_ref_prop, new_raw_picture, theta_capture, phi_capture, psi_capture,
 					altitude_capture, time_capture_seconds, time_capture_useconds, body_v, delta_phi, delta_theta,
 					delta_psi, gold_defined, gold_reset, gold_x, gold_y);
-			
-			for (int i=0; i < visionListener.size(); i++)
+
+			for (int i = 0; i < visionListener.size(); i++)
 				visionListener.get(i).receivedData(d);
 		}
 
@@ -884,7 +902,7 @@ public class NavDataManager extends AbstractManager
 			float[] of_dx = getFloat(b, 5);
 			float[] of_dy = getFloat(b, 5);
 
-			for (int i=0; i < visionListener.size(); i++)
+			for (int i = 0; i < visionListener.size(); i++)
 				visionListener.get(i).receivedVisionOf(of_dx, of_dy);
 		}
 
@@ -894,7 +912,7 @@ public class NavDataManager extends AbstractManager
 		if (visionListener.size() > 0) {
 			float[] vision_raw = getFloat(b, 3);
 
-			for (int i=0; i < visionListener.size(); i++)
+			for (int i = 0; i < visionListener.size(); i++)
 				visionListener.get(i).receivedRawData(vision_raw);
 		}
 	}
@@ -921,8 +939,8 @@ public class NavDataManager extends AbstractManager
 
 			Altitude d = new Altitude(altitude_vision, altitude_vz, altitude_ref, altitude_raw, obs_accZ, obs_alt,
 					obs_x, obs_state, est_vb, est_state);
-			
-			for (int i=0; i < altitudeListener.size(); i++)
+
+			for (int i = 0; i < altitudeListener.size(); i++)
 				altitudeListener.get(i).receivedExtendedAltitude(d);
 		}
 	}
@@ -948,8 +966,8 @@ public class NavDataManager extends AbstractManager
 
 			PWMData d = new PWMData(motor, sat_motor, gaz_feed_forward, gaz_altitude, altitude_integral, vz_ref, u_pry,
 					yaw_u_I, u_planif_pry, u_gaz_planif, current_motor, altitude_prop, altitude_der);
-			
-			for (int i=0; i < pwmlistener.size(); i++)
+
+			for (int i = 0; i < pwmlistener.size(); i++)
 				pwmlistener.get(i).received(d);
 		}
 	}
@@ -957,7 +975,7 @@ public class NavDataManager extends AbstractManager
 	private void parseRcReferencesOption(ByteBuffer b) {
 		if (referencesListener.size() > 0) {
 			int[] rc_ref = getInt(b, 5);
-			for (int i=0; i < referencesListener.size(); i++)
+			for (int i = 0; i < referencesListener.size(); i++)
 				referencesListener.get(i).receivedRcReferences(rc_ref);
 		}
 	}
@@ -968,8 +986,9 @@ public class NavDataManager extends AbstractManager
 			float euler_angles_trim_theta = b.getFloat();
 			float euler_angles_trim_phi = b.getFloat();
 
-			for (int i=0; i < trimsListener.size(); i++)
-				trimsListener.get(i).receivedTrimData(angular_rates_trim_r, euler_angles_trim_theta, euler_angles_trim_phi);
+			for (int i = 0; i < trimsListener.size(); i++)
+				trimsListener.get(i).receivedTrimData(angular_rates_trim_r, euler_angles_trim_theta,
+						euler_angles_trim_phi);
 		}
 	}
 
@@ -1001,25 +1020,29 @@ public class NavDataManager extends AbstractManager
 			ReferencesData d = new ReferencesData(ref_theta, ref_phi, ref_theta_I, ref_phi_I, ref_pitch, ref_roll,
 					ref_yaw, ref_psi, v_ref, theta_mod, phi_mod, k_v, k_mode, ui_time, ui_theta, ui_phi, ui_psi,
 					ui_psi_accuracy, ui_seq);
-			
-			for (int i=0; i < referencesListener.size(); i++)
+
+			for (int i = 0; i < referencesListener.size(); i++)
 				referencesListener.get(i).receivedReferences(d);
 		}
 
 	}
 
 	private void parseRawMeasuresOption(ByteBuffer b) {
-		if (batteryListener.size() > 0 || acceleroListener.size() > 0 || gyroListener.size() > 0 || ultrasoundListener.size() > 0) {
+		if (batteryListener.size() > 0 || acceleroListener.size() > 0 || gyroListener.size() > 0
+				|| ultrasoundListener.size() > 0) {
 			// see http://blog.perquin.com/blog/ar-drone-navboard/
-			// speculative: Raw data (10-bit) of the accelerometers multiplied by 4
+			// speculative: Raw data (10-bit) of the accelerometers multiplied
+			// by 4
 			int[] raw_accs = getUInt16(b, NB_ACCS);
 
 			// see http://blog.perquin.com/blog/ar-drone-navboard/
-			// speculative: Raw data for the gyros, 12-bit A/D converted voltage of the gyros. X,Y=IDG, Z=Epson
+			// speculative: Raw data for the gyros, 12-bit A/D converted voltage
+			// of the gyros. X,Y=IDG, Z=Epson
 			short[] raw_gyros = getShort(b, NB_GYROS);
 
 			// see http://blog.perquin.com/blog/ar-drone-navboard/
-			// speculative: 4.5x Raw data (IDG), gyro values (x/y) with another resolution (see IDG-500 datasheet)
+			// speculative: 4.5x Raw data (IDG), gyro values (x/y) with another
+			// resolution (see IDG-500 datasheet)
 			short[] raw_gyros_110 = getShort(b, 2);
 
 			// Assumption: value well below Integer.MAX_VALUE
@@ -1027,15 +1050,18 @@ public class NavDataManager extends AbstractManager
 			int vbat_raw = b.getInt();
 
 			// see http://blog.perquin.com/blog/ar-drone-navboard/
-			// probably: Array with starts of echos (8 array values @ 25Hz, 9 values @ 22.22Hz)
+			// probably: Array with starts of echos (8 array values @ 25Hz, 9
+			// values @ 22.22Hz)
 			int us_echo_start = getUInt16(b);
 
 			// see http://blog.perquin.com/blog/ar-drone-navboard/
-			// probably: array with ends of echos (8 array values @ 25Hz, 9 values @ 22.22Hz)
+			// probably: array with ends of echos (8 array values @ 25Hz, 9
+			// values @ 22.22Hz)
 			int us_echo_end = getUInt16(b);
 
 			// see http://blog.perquin.com/blog/ar-drone-navboard/
-			// Ultrasonic parameter. speculative: echo number starting with 0. max value 3758. examples: 0,1,2,3,4,5,6,7
+			// Ultrasonic parameter. speculative: echo number starting with 0.
+			// max value 3758. examples: 0,1,2,3,4,5,6,7
 			// ; 0,1,2,3,4,86,6,9
 			int us_association_echo = getUInt16(b);
 
@@ -1044,17 +1070,20 @@ public class NavDataManager extends AbstractManager
 			int us_distance_echo = getUInt16(b);
 
 			// see http://blog.perquin.com/blog/ar-drone-navboard/
-			// Ultrasonic parameter. Counts up from 0 to approx 24346 in 192 sample cycles of which 12 cylces have value
+			// Ultrasonic parameter. Counts up from 0 to approx 24346 in 192
+			// sample cycles of which 12 cylces have value
 			// 0
 			int us_cycle_time = getUInt16(b);
 
 			// see http://blog.perquin.com/blog/ar-drone-navboard/
-			// Ultrasonic parameter. Value between 0 and 4000, no clear pattern. 192 sample cycles of which 12 cycles
+			// Ultrasonic parameter. Value between 0 and 4000, no clear pattern.
+			// 192 sample cycles of which 12 cycles
 			// have value 0
 			int us_cycle_value = getUInt16(b);
 
 			// see http://blog.perquin.com/blog/ar-drone-navboard/
-			// Ultrasonic parameter. Counts down from 4000 to 0 in 192 sample cycles of which 12 cycles have value 0
+			// Ultrasonic parameter. Counts down from 4000 to 0 in 192 sample
+			// cycles of which 12 cycles have value 0
 			int us_cycle_ref = getUInt16(b);
 			int flag_echo_ini = getUInt16(b);
 			int nb_echo = getUInt16(b);
@@ -1062,25 +1091,25 @@ public class NavDataManager extends AbstractManager
 			int alt_temp_raw = b.getInt();
 			short gradient = b.getShort();
 
-			for (int i=0; i < batteryListener.size(); i++)
+			for (int i = 0; i < batteryListener.size(); i++)
 				batteryListener.get(i).voltageChanged(vbat_raw);
 
-			for (int i=0; i < acceleroListener.size(); i++) {
+			for (int i = 0; i < acceleroListener.size(); i++) {
 				AcceleroRawData d = new AcceleroRawData(raw_accs);
 				acceleroListener.get(i).receivedRawData(d);
 			}
 
-			for (int i=0; i < gyroListener.size(); i++) {
+			for (int i = 0; i < gyroListener.size(); i++) {
 				GyroRawData d = new GyroRawData(raw_gyros, raw_gyros_110);
 				gyroListener.get(i).receivedRawData(d);
 			}
 
 			if (ultrasoundListener.size() > 0) {
-				UltrasoundData d = new UltrasoundData(us_echo_start, us_echo_end, us_association_echo,
-						us_distance_echo, us_cycle_time, us_cycle_value, us_cycle_ref, flag_echo_ini, nb_echo,
-						sum_echo, alt_temp_raw, gradient);
-				
-				for (int i=0; i < ultrasoundListener.size(); i++)
+				UltrasoundData d = new UltrasoundData(us_echo_start, us_echo_end, us_association_echo, us_distance_echo,
+						us_cycle_time, us_cycle_value, us_cycle_ref, flag_echo_ini, nb_echo, sum_echo, alt_temp_raw,
+						gradient);
+
+				for (int i = 0; i < ultrasoundListener.size(); i++)
 					ultrasoundListener.get(i).receivedRawData(d);
 			}
 		}
@@ -1108,12 +1137,12 @@ public class NavDataManager extends AbstractManager
 			// TODO: check if LSB indeed means 1 byte
 			int vrefIDG = b.getInt() & 0xFF;
 
-			for (int i=0; i < acceleroListener.size(); i++) {
+			for (int i = 0; i < acceleroListener.size(); i++) {
 				AcceleroPhysData d = new AcceleroPhysData(accs_temp, phys_accs, alim3V3);
 				acceleroListener.get(i).receivedPhysData(d);
 			}
 
-			for (int i=0; i < gyroListener.size(); i++) {
+			for (int i = 0; i < gyroListener.size(); i++) {
 				GyroPhysData d = new GyroPhysData(gyro_temp, phys_gyros, alim3V3, vrefEpson, vrefIDG);
 				gyroListener.get(i).receivedPhysData(d);
 			}
@@ -1125,7 +1154,7 @@ public class NavDataManager extends AbstractManager
 		if (gyroListener.size() > 0) {
 			float[] offset_g = getFloat(b, NB_GYROS);
 
-			for (int i=0; i < gyroListener.size(); i++)
+			for (int i = 0; i < gyroListener.size(); i++)
 				gyroListener.get(i).receivedOffsets(offset_g);
 		}
 	}
@@ -1135,15 +1164,17 @@ public class NavDataManager extends AbstractManager
 			float theta_a = b.getFloat();
 			float phi_a = b.getFloat();
 
-			for (int i=0; i < attitudeListener.size(); i++)
+			for (int i = 0; i < attitudeListener.size(); i++)
 				attitudeListener.get(i).attitudeUpdated(theta_a, phi_a);
 		}
 
 	}
 
+	private MavMqttClient mavclient = MavMqttClient.getInstance();
+
 	private void parseDemoOption(ByteBuffer b) {
-		if (stateListener.size() > 0 || batteryListener.size() > 0 || attitudeListener.size() > 0 || altitudeListener.size() > 0
-				|| velocityListener.size() > 0 || visionListener.size() > 0) {
+		if (stateListener.size() > 0 || batteryListener.size() > 0 || attitudeListener.size() > 0
+				|| altitudeListener.size() > 0 || velocityListener.size() > 0 || visionListener.size() > 0) {
 			int controlState = b.getInt();
 
 			// batteryPercentage is <=100 so sign is not an issue
@@ -1179,23 +1210,27 @@ public class NavDataManager extends AbstractManager
 			float drone_camera_trans[] = getFloat(b, 3);
 
 			if (visionListener.size() > 0 && detection_camera_type != 0) {
-				for (int i=0; i < visionListener.size(); i++)
+				for (int i = 0; i < visionListener.size(); i++)
 					visionListener.get(i).typeDetected(detection_camera_type);
 			}
 
-			for (int i=0; i < stateListener.size(); i++)
+			for (int i = 0; i < stateListener.size(); i++)
 				stateListener.get(i).controlStateChanged(ControlState.fromInt(controlState >> 16));
 
-			for (int i=0; i < batteryListener.size(); i++)
+			for (int i = 0; i < batteryListener.size(); i++)
 				batteryListener.get(i).batteryLevelChanged(batteryPercentage);
 
-			for (int i=0; i < attitudeListener.size(); i++)
+			for (int i = 0; i < attitudeListener.size(); i++) {
 				attitudeListener.get(i).attitudeUpdated(theta, phi, psi);
+				String satt = "{x:" + theta + ",y:" + phi + "z:" + psi + "}";
+				 
+				mavclient.publishsync("attitude", 0, satt.getBytes());
+			}
 
-			for (int i=0; i < altitudeListener.size(); i++)
+			for (int i = 0; i < altitudeListener.size(); i++)
 				altitudeListener.get(i).receivedAltitude(altitude);
 
-			for (int i=0; i < velocityListener.size(); i++)
+			for (int i = 0; i < velocityListener.size(); i++)
 				velocityListener.get(i).velocityChanged(v[0], v[1], v[2]);
 		}
 	}
@@ -1207,7 +1242,7 @@ public class NavDataManager extends AbstractManager
 			int useconds = getUSeconds(time);
 			int seconds = getSeconds(time);
 
-			for (int i=0; i < timeListener.size(); i++)
+			for (int i = 0; i < timeListener.size(); i++)
 				timeListener.get(i).timeReceived(seconds, useconds);
 		}
 	}
@@ -1238,19 +1273,24 @@ public class NavDataManager extends AbstractManager
 
 				int type[] = getInt(b, NB_NAVDATA_DETECTION_RESULTS);
 
-				// assumption: values are well below Integer.MAX_VALUE, so sign is no issue
+				// assumption: values are well below Integer.MAX_VALUE, so sign
+				// is no issue
 				int xc[] = getInt(b, NB_NAVDATA_DETECTION_RESULTS);
 
-				// assumption: values are well below Integer.MAX_VALUE, so sign is no issue
+				// assumption: values are well below Integer.MAX_VALUE, so sign
+				// is no issue
 				int yc[] = getInt(b, NB_NAVDATA_DETECTION_RESULTS);
 
-				// assumption: values are well below Integer.MAX_VALUE, so sign is no issue
+				// assumption: values are well below Integer.MAX_VALUE, so sign
+				// is no issue
 				int width[] = getInt(b, NB_NAVDATA_DETECTION_RESULTS);
 
-				// assumption: values are well below Integer.MAX_VALUE, so sign is no issue
+				// assumption: values are well below Integer.MAX_VALUE, so sign
+				// is no issue
 				int height[] = getInt(b, NB_NAVDATA_DETECTION_RESULTS);
 
-				// assumption: values are well below Integer.MAX_VALUE, so sign is no issue
+				// assumption: values are well below Integer.MAX_VALUE, so sign
+				// is no issue
 				int dist[] = getInt(b, NB_NAVDATA_DETECTION_RESULTS);
 
 				float[] orientation_angle = getFloat(b, NB_NAVDATA_DETECTION_RESULTS);
@@ -1273,20 +1313,22 @@ public class NavDataManager extends AbstractManager
 					}
 				}
 
-				// assumption: values are well below Integer.MAX_VALUE, so sign is
+				// assumption: values are well below Integer.MAX_VALUE, so sign
+				// is
 				// no
 				// issue
 				int camera_source[] = getInt(b, NB_NAVDATA_DETECTION_RESULTS);
 
 				VisionTag[] tags = new VisionTag[ndetected];
 				for (int i = 0; i < ndetected; i++) {
-					// TODO: does this also contain a mask if not multiple detect?
+					// TODO: does this also contain a mask if not multiple
+					// detect?
 					VisionTag tag = new VisionTag(type[i], xc[i], yc[i], width[i], height[i], dist[i],
 							orientation_angle[i], rotation[i], translation[i], DetectionType.fromInt(camera_source[i]));
 					tags[i] = tag;
 				}
 
-				for (int i=0; i < visionListener.size(); i++)
+				for (int i = 0; i < visionListener.size(); i++)
 					visionListener.get(i).tagsDetected(tags);
 			}
 		}
@@ -1313,8 +1355,8 @@ public class NavDataManager extends AbstractManager
 
 			MagnetoData md = new MagnetoData(m, mraw, mrectified, m_, heading_unwrapped, heading_gyro_unwrapped,
 					heading_fusion_unwrapped, calibration_ok, state, radius, error_mean, error_var);
-			
-			for (int i=0; i < magnetoListener.size(); i++)
+
+			for (int i = 0; i < magnetoListener.size(); i++)
 				magnetoListener.get(i).received(md);
 		}
 	}
@@ -1379,21 +1421,24 @@ public class NavDataManager extends AbstractManager
 	}
 
 	/*
-	 * Since Java does not have unsigned bytes, all uint8 are converted to signed shorts
+	 * Since Java does not have unsigned bytes, all uint8 are converted to
+	 * signed shorts
 	 */
 	private short getUInt8(ByteBuffer b) {
 		return (short) (b.get() & 0xFF);
 	}
 
 	/*
-	 * Since Java does not have unsigned shorts, all uint16 are converted to signed integers
+	 * Since Java does not have unsigned shorts, all uint16 are converted to
+	 * signed integers
 	 */
 	private int getUInt16(ByteBuffer b) {
 		return (b.getShort() & 0xFFFF);
 	}
 
 	/*
-	 * Since Java does not have unsigned ints, all uint32 are converted to signed longs
+	 * Since Java does not have unsigned ints, all uint32 are converted to
+	 * signed longs
 	 */
 	private long getUInt32(ByteBuffer b) {
 		return (b.getInt() & 0xFFFFFFFFL);

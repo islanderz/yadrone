@@ -18,17 +18,18 @@ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PRO
 package de.yadrone.base.video;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
-import de.yadrone.base.command.CommandManager;
-import de.yadrone.base.command.VideoBitRateMode;
+import javax.imageio.ImageIO;
+
 import de.yadrone.base.exception.IExceptionListener;
 import de.yadrone.base.exception.VideoException;
 import de.yadrone.base.manager.AbstractTCPManager;
 import de.yadrone.base.utils.ARDroneUtils;
-import de.yadrone.base.video.xuggler.XugglerDecoder;
+import sa.uavcs.paho.client.MavMqttClient;
 
 public class VideoManager extends AbstractTCPManager implements ImageListener 
 {
@@ -56,13 +57,30 @@ public class VideoManager extends AbstractTCPManager implements ImageListener
 		if (this.listener.size() == 0)
 			decoder.setImageListener(null);
 	}
-
+	private int countImages = 0;
 	/** Called only by decoder to inform all the other listener */
-	public void imageUpdated(BufferedImage image)
-	{
+	public void imageUpdated(BufferedImage image) {
+		
 		for (int i=0; i < listener.size(); i++)
 		{
-			listener.get(i).imageUpdated(image);
+			countImages++;
+			//KNS: Comment or uncomment to view video in decoder
+//			listener.get(i).imageUpdated(image);
+			System.err.println("Count + " + countImages);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			try {
+				//KNS: Previsouly jpg
+				ImageIO.write( image, "JPEG", baos );
+				baos.flush();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}  
+			
+			byte[] imageInByte = baos.toByteArray();
+			 
+			MavMqttClient.getInstance().publishsync("imagestream", 0, imageInByte);
+		 
 		}
 	}
 	

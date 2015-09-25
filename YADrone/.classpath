@@ -14,5 +14,7 @@
 	<classpathentry kind="lib" path="lib/reflections/reflections-0.9.9-RC1.jar"/>
 	<classpathentry kind="lib" path="lib/zxing/core-2.2.jar"/>
 	<classpathentry kind="lib" path="lib/zxing/javase-2.2.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.paho.client.mqttv3-1.0.2-sources.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.paho.client.mqttv3-1.0.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
