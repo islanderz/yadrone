@@ -9,6 +9,11 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
+/**
+ * 
+ * @author kamil.saib
+ * @copyright LGPL 
+ */
 public class MavMqttClient {
 
 	int state = BEGIN;
@@ -24,8 +29,8 @@ public class MavMqttClient {
 
 	static final String BROKER_URL = "ec2-54-186-38-68.us-west-2.compute.amazonaws.com";
 	static final int BROKER_PORT = 1884;
-	static final String M2MIO_STUFF = "uas";
-	static final String M2MIO_THING = "mav01";
+	static final String M2MIO_UAS_ID = "uas01";
+	static final String M2MIO_MAV_REG_NO = "mav0XX1";
 	static final String M2MIO_USERNAME = "";
 	static final String M2MIO_PASSWORD_MD5 = "";
 	static boolean ssl = false;
@@ -33,7 +38,7 @@ public class MavMqttClient {
 	private static MavMqttClient instance = null;
 
 	static final String subTopic = "uavcs/#";
-	static final String pubTopic = "uavcs/" + M2MIO_THING + "/";
+	static final String pubTopic = "uavcs/"+ M2MIO_UAS_ID + "/"+ M2MIO_MAV_REG_NO + "/";
 
 	public static MavMqttClient getInstance() {
 		if (instance == null) {
@@ -51,13 +56,13 @@ public class MavMqttClient {
 	protected MavMqttClient() {
 
 		// Default settings:
-		boolean quietMode = false;
+		boolean quietMode = true;
 		String action = "publish";
 		String message = "Message from uas client waiter (Paho MQTTv3)";
 		int qos = 2;
 		String broker = BROKER_URL;
 		int port = BROKER_PORT;
-		String clientId = M2MIO_THING + "_" + java.util.UUID.randomUUID();
+		String clientId = M2MIO_MAV_REG_NO + "_" + java.util.UUID.randomUUID();
 
 		boolean cleanSession = true; // Non durable subscriptions
 
@@ -356,7 +361,7 @@ public class MavMqttClient {
 				public void onSuccess(IMqttToken asyncActionToken) {
 					String time2 = new java.sql.Timestamp(System.currentTimeMillis()).toString();
 					log("Publish Completed :" + time2);
-					// state = PUBLISHED;
+					//KNS  state = PUBLISHED;
 					state = CONNECTED;
 					carryOn();
 				}

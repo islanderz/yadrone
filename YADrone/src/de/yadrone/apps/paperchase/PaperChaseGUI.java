@@ -32,6 +32,7 @@ import de.yadrone.base.IARDrone;
 import de.yadrone.base.navdata.ControlState;
 import de.yadrone.base.navdata.DroneState;
 import de.yadrone.base.navdata.StateListener;
+import de.yadrone.base.navdata.VelocityListener;
 import de.yadrone.base.video.ImageListener;
 
 public class PaperChaseGUI extends JFrame implements ImageListener, TagListener
@@ -92,6 +93,8 @@ public class PaperChaseGUI extends JFrame implements ImageListener, TagListener
 			
 			public void controlStateChanged(ControlState state) { }
 		});
+         
+       
         
         pack();
 	}
